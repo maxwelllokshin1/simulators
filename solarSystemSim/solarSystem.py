@@ -133,7 +133,7 @@ def main():
     # Slider values
     slider_width = 300
     slider_height = 5
-    slider_pos = 150  # Initial position of the slider (scaled mass of Sun)
+    slider_pos = 30  # Initial position of the slider (scaled mass of Sun)
     slider_x = (WIDTH) - slider_width - 100
     slider_y = 50
 
@@ -174,7 +174,7 @@ def main():
                     # Update slider position based on mouse movement
                     slider_pos = max(0, min(slider_width, mouse_pos[0] - slider_x))
                     # Update Sun's mass based on slider position (scale the value)
-                    sun.mass = 50 + (slider_pos / slider_width) * 200  # Mass range from 50 to 250
+                    sun.mass = (slider_pos / slider_width) * 1000  # Mass range from 50 to 250
 
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if not selected_planet:
