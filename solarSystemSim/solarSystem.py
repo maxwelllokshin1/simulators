@@ -4,8 +4,9 @@ import math
 pygame.init()
 
 # WIDTH,HEIGHT = 10000, 10000
-WIDTH, HEIGHT = 1400, 900
-win = pygame.display.set_mode((WIDTH, HEIGHT))
+SCREEN_WIDTH, SCREEN_HEIGHT = 1400, 900
+WIDTH, HEIGHT = 1400*5, 900*5
+win = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Solar System Sim")
 
 MERCURY_MASS = 10
@@ -33,14 +34,15 @@ ORANGE = (255,165, 0)
 CYAN = (0, 255, 255)
 
 BG = pygame.transform.scale(pygame.image.load("simulators/solarSystemSim/background.jpg"), (WIDTH, HEIGHT))
-mercury_pic = pygame.transform.scale(pygame.image.load("simulators/solarSystemSim/mercury.png"), (PLANET_RADIUS * 2, PLANET_RADIUS * 2))
-venus_pic = pygame.transform.scale(pygame.image.load("simulators/solarSystemSim/venus.png"), (PLANET_RADIUS * 2, PLANET_RADIUS * 2))
-earth_pic = pygame.transform.scale(pygame.image.load("simulators/solarSystemSim/earth.png"), (PLANET_RADIUS * 2, PLANET_RADIUS * 2))
-mars_pic = pygame.transform.scale(pygame.image.load("simulators/solarSystemSim/mars.png"), (PLANET_RADIUS * 2, PLANET_RADIUS * 2))
-jupiter_pic = pygame.transform.scale(pygame.image.load("simulators/solarSystemSim/jupiter.png"), (PLANET_RADIUS * 2, PLANET_RADIUS * 2))
-saturn_pic = pygame.transform.scale(pygame.image.load("simulators/solarSystemSim/saturn.png"), (PLANET_RADIUS * 2, PLANET_RADIUS * 2))
-urnaus_pic = pygame.transform.scale(pygame.image.load("simulators/solarSystemSim/uanus.png"), (PLANET_RADIUS * 2, PLANET_RADIUS * 2))
-neptune_pic = pygame.transform.scale(pygame.image.load("simulators/solarSystemSim/neptune.png"), (PLANET_RADIUS * 2, PLANET_RADIUS * 2))
+sun_pic = pygame.image.load("simulators/solarSystemSim/sun.png")
+mercury_pic = pygame.image.load("simulators/solarSystemSim/mercury.png")
+venus_pic = pygame.image.load("simulators/solarSystemSim/venus.png")
+earth_pic = pygame.image.load("simulators/solarSystemSim/earth.png")
+mars_pic = pygame.image.load("simulators/solarSystemSim/mars.png")
+jupiter_pic = pygame.image.load("simulators/solarSystemSim/jupiter.png")
+saturn_pic = pygame.image.load("simulators/solarSystemSim/saturn.png")
+urnaus_pic = pygame.image.load("simulators/solarSystemSim/uanus.png")
+neptune_pic = pygame.image.load("simulators/solarSystemSim/neptune.png")
 
 
 # def hex_to_rgb(hex_code):
@@ -54,13 +56,16 @@ neptune_pic = pygame.transform.scale(pygame.image.load("simulators/solarSystemSi
 # BLUE = hex_to_rgb(html_color)
 
 class SUN:
-    def __init__(self, x, y, mass):
+    def __init__(self, x, y, mass, img):
         self.x = x
         self.y = y
         self.mass = mass
+        self.img = img
     
-    def draw(self):
-        pygame.draw.circle(win, YELLOW, (self.x, self.y), SUN_RADIUS)
+    def draw(self, zoom_level):
+        rad = SUN_RADIUS * zoom_level
+        img = pygame.transform.scale(self.img, (rad * 2, rad * 2))
+        win.blit(img, (self.x - rad, self.y - rad))
 
 class PLANET:
     def __init__(self, x, y, vel_x, vel_y, mass, name, img):
@@ -88,14 +93,14 @@ class PLANET:
         self.x += self.vel_x
         self.y += self.vel_y
     
-    def draw(self):
-        font = pygame.font.SysFont("Comic-Sans", 16)
+    def draw(self, zoom_level):
+        fontSize = math.floor(16 * zoom_level)
+        font = pygame.font.SysFont("Comic-Sans", fontSize)
         text = font.render(self.name, True, WHITE)
-        win.blit(text, (self.x, self.y - 20))
-        # pygame.draw.circle(win, self.color, (self.x, self.y), PLANET_RADIUS)
-        win.blit(self.img, (self.x - PLANET_RADIUS, self.y - PLANET_RADIUS))
-
-# def createObj():
+        rad = PLANET_RADIUS * zoom_level 
+        img = pygame.transform.scale(self.img, (rad*2, rad*2))
+        win.blit(text, text.get_rect(center=(self.x,self.y-rad-10)))
+        win.blit(img, (self.x - rad, self.y - rad))
 
 def movePlanet(Location, mouse, obj):
     t_x, t_y = Location
@@ -113,44 +118,69 @@ def draw_slider(slider_x, slider_y, slider_width, slider_height, slider_pos):
     pygame.draw.rect(win, WHITE, (slider_x, slider_y, slider_width, slider_height))
     pygame.draw.circle(win, (150,150,150), (slider_x + slider_pos, slider_y + slider_height // 2), 10)
 
+def zoomFeature():
+    #Increase size/Decrease
+
+    #Increase distance/Decrease
+    pass
+
 def main():
     running = True
     clock = pygame.time.Clock()
 
-    sun = SUN(WIDTH//2, HEIGHT//2, SUN_MASS)
-    Mercury = PLANET(WIDTH//2 - 50, HEIGHT//2, 0/VELOCITY_SCALE, 500/VELOCITY_SCALE, MERCURY_MASS, "Mercury", mercury_pic)
-    Venus = PLANET(WIDTH//2 - 100, HEIGHT//2, 0/VELOCITY_SCALE, 350/VELOCITY_SCALE, VENUS_MASS, "Venus", venus_pic)
-    Earth = PLANET(WIDTH//2 - 125, HEIGHT//2, 0/VELOCITY_SCALE, 300/VELOCITY_SCALE, EARTH_MASS, "Earth", earth_pic)
-    Mars = PLANET(WIDTH//2 - 200, HEIGHT//2, 0/VELOCITY_SCALE, 250/VELOCITY_SCALE, MARS_MASS, "Mars", mars_pic)
-    Jupiter = PLANET(WIDTH//2 - 300, HEIGHT//2, 0/VELOCITY_SCALE, 150/VELOCITY_SCALE, JUPITER_MASS, "Jupiter", jupiter_pic)
-    Saturn = PLANET(WIDTH//2 - 400, HEIGHT//2, 0/VELOCITY_SCALE, 120/VELOCITY_SCALE, SATURN_MASS, "Saturn", saturn_pic)
-    Uranus = PLANET(WIDTH//2 - 500, HEIGHT//2, 0/VELOCITY_SCALE, 90/VELOCITY_SCALE, URANUS_MASS, "Uranus", urnaus_pic)
-    Neptune = PLANET(WIDTH//2 - 600, HEIGHT//2, 0/VELOCITY_SCALE, 80/VELOCITY_SCALE, NEPTUNE_MASS, "Neptune", neptune_pic)
+   
+
+    mercury_distance = 57.91  
+    venus_distance = 108.2   
+    earth_distance = 149.6   
+    mars_distance = 227.9  
+    jupiter_distance = 778.3   
+    saturn_distance = 1429   
+    uranus_distance = 2871   
+    neptune_distance = 4495  
+
+    mercury_velocity = 478.7 
+    venus_velocity = 350.2   
+    earth_velocity = 297.8   
+    mars_velocity = 240.77   
+    jupiter_velocity = 130.7 
+    saturn_velocity = 969   
+    uranus_velocity = 681   
+    neptune_velocity = 543   
+
+    # Create Sun and Planets
+    sun = SUN(WIDTH // 2, HEIGHT // 2, SUN_MASS, sun_pic)
+    Mercury = PLANET(WIDTH // 2 - mercury_distance, HEIGHT // 2, 0, mercury_velocity/VELOCITY_SCALE, MERCURY_MASS, "Mercury", mercury_pic)
+    Venus = PLANET(WIDTH // 2 - venus_distance, HEIGHT // 2, 0, venus_velocity/VELOCITY_SCALE, VENUS_MASS, "Venus", venus_pic)
+    Earth = PLANET(WIDTH // 2 - earth_distance, HEIGHT // 2, 0, earth_velocity/VELOCITY_SCALE, EARTH_MASS, "Earth", earth_pic)
+    Mars = PLANET(WIDTH // 2 - mars_distance, HEIGHT // 2, 0, mars_velocity/VELOCITY_SCALE, MARS_MASS, "Mars", mars_pic)
+    Jupiter = PLANET(WIDTH // 2 - jupiter_distance, HEIGHT // 2, 0, jupiter_velocity/VELOCITY_SCALE, JUPITER_MASS, "Jupiter", jupiter_pic)
+    Saturn = PLANET(WIDTH // 2 - saturn_distance, HEIGHT // 2, 0, saturn_velocity/VELOCITY_SCALE, SATURN_MASS, "Saturn", saturn_pic)
+    Uranus = PLANET(WIDTH // 2 - uranus_distance, HEIGHT // 2, 0, uranus_velocity/VELOCITY_SCALE, URANUS_MASS, "Uranus", urnaus_pic)
+    Neptune = PLANET(WIDTH // 2 - neptune_distance, HEIGHT // 2, 0, neptune_velocity/VELOCITY_SCALE, NEPTUNE_MASS, "Neptune", neptune_pic)
+
 
     objects = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune]
-    # collided_earth = False
 
-    # Slider values
-    slider_width = 300
-    slider_height = 5
-    slider_pos = 30  # Initial position of the slider (scaled mass of Sun)
-    slider_x = (WIDTH) - slider_width - 100
-    slider_y = 50
+    sliderWidth = 300
+    sliderHeight = 5
+    sliderX = (SCREEN_WIDTH) - sliderWidth - 75
+
+
+    sunMassSliderPos = 30  
+    sunMassSliderY = 50
+
+    zoomSliderPos = 30
+    zoomSliderY = sunMassSliderY + 75
 
     selected_planet = None
     planetClicked = False
 
-    sunClicked = False
+    sunSlider = False
+    zoomSlider = False
 
-    
-    # objects.append(Mercury)
-    # objects.append(Venus)
-    # objects.append(Earth)
-    # objects.append(Mars)
-    # objects.append(Jupiter)
-    # objects.append(Saturn)
-    # objects.append(Uranus)
-    # objects.append(Neptune)
+    zoom_level = 1.0
+
 
     while running:
         clock.tick(FPS)
@@ -160,23 +190,24 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-            # Handle slider dragging
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if slider_x <= mouse_pos[0] <= slider_x + slider_width and slider_y <= mouse_pos[1] <= slider_y + slider_height:
-                    # If mouse click is on the slider
-                    sunClicked = True
-
             if event.type == pygame.MOUSEBUTTONUP:
-                sunClicked = False
+                sunSlider = False
+                zoomSlider = False
 
             if event.type == pygame.MOUSEMOTION:
-                if sunClicked:
-                    # Update slider position based on mouse movement
-                    slider_pos = max(0, min(slider_width, mouse_pos[0] - slider_x))
-                    # Update Sun's mass based on slider position (scale the value)
-                    sun.mass = (slider_pos / slider_width) * 1000  # Mass range from 50 to 250
+                if sunSlider:
+                    sunMassSliderPos = max(0, min(sliderWidth, mouse_pos[0] - sliderX))
+                    sun.mass = (sunMassSliderPos / sliderWidth) * 1000  
+                if zoomSlider:
+                    zoomSliderPos = max(0, min(sliderWidth, mouse_pos[0] - sliderX))
+                    zoom_level = (zoomSliderPos / sliderWidth) * 20  
 
             if event.type == pygame.MOUSEBUTTONDOWN:
+                if math.sqrt((mouse_pos[0] - (sliderX + sunMassSliderPos))**2 + (mouse_pos[1] - sunMassSliderY)**2) <= 50:
+                    sunSlider = True
+                if math.sqrt((mouse_pos[0] - (sliderX + zoomSliderPos))**2 + (mouse_pos[1] - zoomSliderY)**2) <= 50:
+                    zoomSlider = True
+
                 if not selected_planet:
                     for obj in objects:
                         if math.sqrt((mouse_pos[0] - obj.x)**2 + (mouse_pos[1] - obj.y)**2) <= PLANET_RADIUS*2:
@@ -192,29 +223,31 @@ def main():
                     selected_planet = movePlanet((selected_planet.x, selected_planet.y), mouse_pos, selected_planet)
                     selected_planet = None
                     
-        # pygame.draw.rect(win, (0,0,0), (0,0, WIDTH, HEIGHT))
 
         win.blit(BG, (0,0))
 
         if selected_planet and planetClicked:
             pygame.draw.line(win, WHITE, (selected_planet.x, selected_planet.y), mouse_pos, 2)
 
-        # Draw the Sun's mass slider
-        draw_slider(slider_x, slider_y, slider_width, slider_height, slider_pos)
+        # draws slider for changing suns mass feature
+        draw_slider(sliderX, sunMassSliderY, sliderWidth, sliderHeight, sunMassSliderPos)
 
-        # Display current Sun's mass
         font = pygame.font.SysFont("Comic-Sans", 20)
         mass_text = font.render(f"Sun's Mass: {int(sun.mass)}", True, WHITE)
-        win.blit(mass_text, (slider_x , slider_y-35))
+        win.blit(mass_text, (sliderX , sunMassSliderY-35))
+
+
+        # Draws slided for zoom in/out feature
+        draw_slider(sliderX, zoomSliderY, sliderWidth, sliderHeight, zoomSliderPos)
+
+        font = pygame.font.SysFont("Comic-Sans", 20)
+        mass_text = font.render(f"ZOOM IN/OUT: {int(zoom_level)}", True, WHITE)
+        win.blit(mass_text, (sliderX , zoomSliderY-35))
 
         for obj in objects:
-            obj.draw()
+            obj.draw(zoom_level)
             obj.move(sun)
-            # for obj2 in objects:
-            #     if obj2 == obj:
-            #         break
-            #     else:
-            #         obj.move(obj2)
+
             off_screen = obj.x < 0 or obj.x > WIDTH or obj.y < 0 or obj.y > HEIGHT
             collided_sun = math.sqrt((obj.x - sun.x)**2 + (obj.y - sun.y)**2) <= SUN_RADIUS
             
@@ -223,7 +256,7 @@ def main():
 
         
 
-        sun.draw()
+        sun.draw(zoom_level)
         pygame.display.update()
 
     pygame.quit()
