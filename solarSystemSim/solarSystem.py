@@ -44,7 +44,7 @@ CYAN = (0, 255, 255)
 
 
 # IMAGES FOR ALL PLANETS, SUN, AND BACKGROUND
-BG = pygame.transform.scale(pygame.image.load("simulators/solarSystemSim/background.jpg"), (WIDTH,HEIGHT))
+BG = pygame.image.load("simulators/solarSystemSim/background.jpg")
 sun_pic = pygame.image.load("simulators/solarSystemSim/sun.png")
 mercury_pic = pygame.image.load("simulators/solarSystemSim/mercury.png")
 venus_pic = pygame.image.load("simulators/solarSystemSim/venus.png")
@@ -55,6 +55,25 @@ saturn_pic = pygame.image.load("simulators/solarSystemSim/saturn.png")
 urnaus_pic = pygame.image.load("simulators/solarSystemSim/uanus.png")
 neptune_pic = pygame.image.load("simulators/solarSystemSim/neptune.png")
 
+
+# Optimized background handling
+class ScaledBackground:
+    def __init__(self, original_image, max_zoom_level):
+        self.original_image = original_image
+        self.max_zoom_level = max_zoom_level
+        self.scaled_images = {}
+    
+    def get_scaled_image(self, zoom_level):
+        if zoom_level not in self.scaled_images:
+            # Scale the image only if it's not already cached
+            bg_width = max(SCREEN_WIDTH, WIDTH * (zoom_level / 10))
+            bg_height = max(SCREEN_HEIGHT, HEIGHT * (zoom_level / 10))
+            scaled_bg = pygame.transform.scale(self.original_image, (int(bg_width), int(bg_height)))
+            self.scaled_images[zoom_level] = scaled_bg
+        return self.scaled_images[zoom_level]
+
+# Initialize the background cache
+background_handler = ScaledBackground(BG, max_zoom_level=20)
 
 # def hex_to_rgb(hex_code):
 #     hex_code = hex_code.lstrip('#')
@@ -137,8 +156,8 @@ class PLANET:
         win.blit(img, (adjusted_x - rad - offset_x, adjusted_y - rad - offset_y)) # draw planet image
 
 def movePlanet(Location, mouse, obj):
-    t_x, t_y = Location
-    m_x, m_y = mouse
+    t_x, t_y = Location # Second location when clicked  
+    m_x, m_y = mouse # Initial clicked point
 
     vel_x = (m_x - t_x) / VELOCITY_SCALE
     vel_y = (m_y - t_y) / VELOCITY_SCALE
@@ -272,11 +291,21 @@ def main():
 
                 
                 if selected_planet and not planetClicked:
-                    selected_planet = movePlanet((selected_planet.x, selected_planet.y), (mouse_pos + (offset_x,offset_y)), selected_planet)
+                    
+                    selected_planet = movePlanet((selected_planet.x, selected_planet.y), (mouse_pos[0] + offset_x, mouse_pos[1] + offset_y), selected_planet)
                     selected_planet = None
 
-        # Draw the background
-        win.blit(BG, (0 - offset_x, 0 - offset_y))
+        # bg_width = max(SCREEN_WIDTH, WIDTH * zoom_level/10)
+        # bg_height = max(SCREEN_HEIGHT, HEIGHT * zoom_level / 10)
+
+        # scaled_bg = pygame.transform.scale(BG, (int(bg_width), int(bg_height)))
+
+        scaled_bg = background_handler.get_scaled_image(zoom_level)
+        offset_x = (scaled_bg.get_width() - SCREEN_WIDTH) //2
+        offset_y = (scaled_bg.get_height() - SCREEN_HEIGHT) //2
+
+        # Draw the scaled background (no need to scale every time)
+        win.blit(scaled_bg, (0-offset_x, 0-offset_y))
 
 
         if selected_planet and planetClicked:
