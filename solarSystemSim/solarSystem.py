@@ -4,7 +4,7 @@ import math
 pygame.init() #start the pygame
 
 SCREEN_WIDTH, SCREEN_HEIGHT = 1400, 900 # window to be playing on
-WIDTH, HEIGHT = 1400*10, 900*10 # actual size of simulation
+WIDTH, HEIGHT = 1400*7, 900*7 # actual size of simulation
 win = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT)) # create game screen
 pygame.display.set_caption("Solar System Sim") # name title
 
@@ -58,18 +58,23 @@ neptune_pic = pygame.image.load("simulators/solarSystemSim/neptune.png")
 
 # Optimized background handling
 class ScaledBackground:
-    def __init__(self, original_image, max_zoom_level):
-        self.original_image = original_image
-        self.max_zoom_level = max_zoom_level
+
+    # initialize the background
+    def __init__(self, img, max_zoom_level):
+        self.img = img # the image
+        self.max_zoom_level = max_zoom_level # zoom
         self.scaled_images = {}
+
+    
     
     def get_scaled_image(self, zoom_level):
         if zoom_level not in self.scaled_images:
             # Scale the image only if it's not already cached
             bg_width = max(SCREEN_WIDTH, WIDTH * (zoom_level / 10))
             bg_height = max(SCREEN_HEIGHT, HEIGHT * (zoom_level / 10))
-            scaled_bg = pygame.transform.scale(self.original_image, (int(bg_width), int(bg_height)))
-            self.scaled_images[zoom_level] = scaled_bg
+
+            scaled_bg = pygame.transform.scale(self.img, (int(bg_width), int(bg_height))) # the background scaled
+            self.scaled_images[zoom_level] = scaled_bg # add the scaled image zoom_level to the array
         return self.scaled_images[zoom_level]
 
 # Initialize the background cache
@@ -105,7 +110,7 @@ class SUN:
 # Create PLANET class
 class PLANET:
     # Define all attributes x, y, vel_x, vel_y, mass, name, img
-    def __init__(self, x, y, vel_x, vel_y, mass, name, img):
+    def __init__(self, x, y, vel_x, vel_y, mass, name, img, adjusted_x, adjusted_y):
         self.x = x
         self.y = y
         self.vel_x = vel_x
@@ -139,8 +144,8 @@ class PLANET:
     # Draw the planet 
     def draw(self, zoom_level, offset_x, offset_y):
         # change the position based on the zoom
-        adjusted_x = (self.x - WIDTH//2) * (zoom_level/10) + WIDTH // 2 
-        adjusted_y = (self.y - HEIGHT//2) * (zoom_level/10) + HEIGHT // 2
+        self.adjusted_x = (self.x - WIDTH//2) * (zoom_level/10) + WIDTH // 2 
+        self.adjusted_y = (self.y - HEIGHT//2) * (zoom_level/10) + HEIGHT // 2
 
         # change the radius based on zoom
         rad = PLANET_RADIUS * zoom_level 
@@ -149,18 +154,18 @@ class PLANET:
         fontSize = math.floor(16 * zoom_level) # font size based on zoom level
         font = pygame.font.SysFont("Comic-Sans", fontSize) # font style
         text = font.render(self.name, True, WHITE)  # how the text should look
-        win.blit(text, text.get_rect(center=(adjusted_x - offset_x,adjusted_y - rad - 10 - offset_y)))  # pasting the text on the planets
+        win.blit(text, text.get_rect(center=(self.adjusted_x - offset_x,self.adjusted_y - rad - 10 - offset_y)))  # pasting the text on the planets
 
         # create the planet image based on radius
         img = pygame.transform.scale(self.img, (rad*2, rad*2)) 
-        win.blit(img, (adjusted_x - rad - offset_x, adjusted_y - rad - offset_y)) # draw planet image
+        win.blit(img, (self.adjusted_x - rad - offset_x, self.adjusted_y - rad - offset_y)) # draw planet image
 
 def movePlanet(Location, mouse, obj):
     t_x, t_y = Location # Second location when clicked  
     m_x, m_y = mouse # Initial clicked point
 
-    vel_x = (m_x - t_x) / VELOCITY_SCALE
-    vel_y = (m_y - t_y) / VELOCITY_SCALE
+    vel_x = ((m_x - t_x)*2) / VELOCITY_SCALE
+    vel_y = ((m_y - t_y)*2) / VELOCITY_SCALE
     
     obj.vel_x += vel_x
     obj.vel_y += vel_y
@@ -176,7 +181,7 @@ def main():
     clock = pygame.time.Clock()
 
    
-
+    # All planets distances relative to the sun
     mercury_distance = 57.91  
     venus_distance = 108.2   
     earth_distance = 149.6   
@@ -186,6 +191,7 @@ def main():
     uranus_distance = 2871   
     neptune_distance = 4495  
 
+    # All Planets Velocities
     mercury_velocity = 478.7 
     venus_velocity = 350.2   
     earth_velocity = 297.8   
@@ -197,48 +203,72 @@ def main():
 
     # Create Sun and Planets
     sun = SUN(WIDTH // 2, HEIGHT // 2, SUN_MASS, sun_pic)
-    Mercury = PLANET(WIDTH // 2 - mercury_distance, HEIGHT // 2, 0, mercury_velocity/VELOCITY_SCALE, MERCURY_MASS, "Mercury", mercury_pic)
-    Venus = PLANET(WIDTH // 2 - venus_distance, HEIGHT // 2, 0, venus_velocity/VELOCITY_SCALE, VENUS_MASS, "Venus", venus_pic)
-    Earth = PLANET(WIDTH // 2 - earth_distance, HEIGHT // 2, 0, earth_velocity/VELOCITY_SCALE, EARTH_MASS, "Earth", earth_pic)
-    Mars = PLANET(WIDTH // 2 - mars_distance, HEIGHT // 2, 0, mars_velocity/VELOCITY_SCALE, MARS_MASS, "Mars", mars_pic)
-    Jupiter = PLANET(WIDTH // 2 - jupiter_distance, HEIGHT // 2, 0, jupiter_velocity/VELOCITY_SCALE, JUPITER_MASS, "Jupiter", jupiter_pic)
-    Saturn = PLANET(WIDTH // 2 - saturn_distance, HEIGHT // 2, 0, saturn_velocity/VELOCITY_SCALE, SATURN_MASS, "Saturn", saturn_pic)
-    Uranus = PLANET(WIDTH // 2 - uranus_distance, HEIGHT // 2, 0, uranus_velocity/VELOCITY_SCALE, URANUS_MASS, "Uranus", urnaus_pic)
-    Neptune = PLANET(WIDTH // 2 - neptune_distance, HEIGHT // 2, 0, neptune_velocity/VELOCITY_SCALE, NEPTUNE_MASS, "Neptune", neptune_pic)
+    Mercury = PLANET(WIDTH // 2 - mercury_distance, HEIGHT // 2, 0, mercury_velocity/VELOCITY_SCALE, MERCURY_MASS, "Mercury", mercury_pic, 0, 0)
+    Venus = PLANET(WIDTH // 2 - venus_distance, HEIGHT // 2, 0, venus_velocity/VELOCITY_SCALE, VENUS_MASS, "Venus", venus_pic, 0, 0)
+    Earth = PLANET(WIDTH // 2 - earth_distance, HEIGHT // 2, 0, earth_velocity/VELOCITY_SCALE, EARTH_MASS, "Earth", earth_pic, 0, 0)
+    Mars = PLANET(WIDTH // 2 - mars_distance, HEIGHT // 2, 0, mars_velocity/VELOCITY_SCALE, MARS_MASS, "Mars", mars_pic, 0, 0)
+    Jupiter = PLANET(WIDTH // 2 - jupiter_distance, HEIGHT // 2, 0, jupiter_velocity/VELOCITY_SCALE, JUPITER_MASS, "Jupiter", jupiter_pic, 0, 0)
+    Saturn = PLANET(WIDTH // 2 - saturn_distance, HEIGHT // 2, 0, saturn_velocity/VELOCITY_SCALE, SATURN_MASS, "Saturn", saturn_pic, 0 ,0 )
+    Uranus = PLANET(WIDTH // 2 - uranus_distance, HEIGHT // 2, 0, uranus_velocity/VELOCITY_SCALE, URANUS_MASS, "Uranus", urnaus_pic, 0 ,0 )
+    Neptune = PLANET(WIDTH // 2 - neptune_distance, HEIGHT // 2, 0, neptune_velocity/VELOCITY_SCALE, NEPTUNE_MASS, "Neptune", neptune_pic, 0, 0)
 
 
+    # Add all planets to array
     objects = [Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune]
 
+    # Initialize the sliders properties
     sliderWidth = 300
     sliderHeight = 5
     sliderX = (SCREEN_WIDTH) - sliderWidth - 75
 
-
-    sunMassSliderPos = 30  
+    # Sun slider pos and Y
+    sunMassSliderPos = sliderWidth / 10 
     sunMassSliderY = 50
 
+    # Zoom slider pos and Y
     zoomSliderPos = sliderWidth/2
     zoomSliderY = sunMassSliderY + 75
 
-    selected_planet = None
-    planetClicked = False
+    # Spped slider pos and Y
+    speedUpSliderPos = sliderWidth / 5
+    speedUpSliderY = zoomSliderY + 75
 
+    selected_planet = None # Current planet selected
+    planetClicked = False # Is the planet cilcked?
+
+    # Certain selected slider
     sunSlider = False
     zoomSlider = False
+    speedUpSlider = False
+
+    # Moving screen?
     moveScreen = False
 
+    # The zoom
     zoom_level = 10.0
 
+    # Since all planets will be located at top left of screen, adjust their offset according to the WIDTH, HEIGHT, and screen
     offset_x = (WIDTH - SCREEN_WIDTH) //2
     offset_y = (HEIGHT - SCREEN_HEIGHT) //2
 
+    # Last mouse position
     last_mouse_pos = None
 
+    # IN PROCESS
+    fps_multiplier = 1
 
+
+    # Run program
     while running:
-        clock.tick(FPS)
+        clock.tick(FPS) # Run based on FPS
 
-        mouse_pos = pygame.mouse.get_pos()
+        mouse_pos = pygame.mouse.get_pos()  # get the mouse position
+
+        # Current backgorund information
+        scaled_bg = background_handler.get_scaled_image(zoom_level)
+        width_bg = (scaled_bg.get_width() - SCREEN_WIDTH) //2
+        height_bg = (scaled_bg.get_height() - SCREEN_HEIGHT) //2
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -246,6 +276,7 @@ def main():
             if event.type == pygame.MOUSEBUTTONUP:
                 sunSlider = False
                 zoomSlider = False
+                speedUpSlider = False
                 moveScreen = False
                 last_mouse_pos = None
 
@@ -256,6 +287,13 @@ def main():
                 if zoomSlider:
                     zoomSliderPos = max(0, min(sliderWidth, mouse_pos[0] - sliderX))
                     zoom_level = (zoomSliderPos / sliderWidth) * 20
+                if speedUpSlider:
+                    speedUpSliderPos = max(0, min(sliderWidth, mouse_pos[0] - sliderX))
+                    fps_multiplier = (speedUpSliderPos / sliderWidth) * 1000
+                    # adjusted_fps = int(FPS * fps_multiplier)  # Adjust FPS based on multiplier
+                    # clock.tick(adjusted_fps)
+                    # sun.mass = SUN_MASS * speed_multiplier
+
                     
                     
                 if moveScreen and last_mouse_pos:
@@ -270,18 +308,28 @@ def main():
 
 
             if event.type == pygame.MOUSEBUTTONDOWN:
+                # print(sun.x, " ", sun.y)
+                # print(offset_x, " ", offset_y)
+                # print(0-width_bg, " ", 0-height_bg)
+                # print(Earth.x, " ", Earth.y)
                 if 0 <= mouse_pos[0] <= SCREEN_WIDTH and 0 <= mouse_pos[0] <= SCREEN_HEIGHT:
                     moveScreen = True
                     last_mouse_pos = mouse_pos
 
+                # Sun mass slider
                 if math.sqrt((mouse_pos[0] - (sliderX + sunMassSliderPos))**2 + (mouse_pos[1] - sunMassSliderY)**2) <= 50:
                     sunSlider = True
+                # Zoom slider
                 if math.sqrt((mouse_pos[0] - (sliderX + zoomSliderPos))**2 + (mouse_pos[1] - zoomSliderY)**2) <= 50:
                     zoomSlider = True
+                # SPeed up slider
+                if math.sqrt((mouse_pos[0] - (sliderX + speedUpSliderPos))**2 + (mouse_pos[1] - speedUpSliderY)**2) <= 50:
+                    speedUpSlider = True
 
                 if not selected_planet:
                     for obj in objects:
-                        if math.sqrt(((mouse_pos[0] + offset_x) - obj.x)**2 + ((mouse_pos[1] + offset_y) - obj.y)**2) <= PLANET_RADIUS*(2*zoom_level):
+                        if math.sqrt((mouse_pos[0] + offset_x - obj.adjusted_x)**2 + ((mouse_pos[1] + offset_y) - obj.adjusted_y)**2) <= PLANET_RADIUS*(2*zoom_level):
+                            print("CLICKED ", obj.name, " ", ((mouse_pos[0] + offset_x) - obj.x))
                             selected_planet = obj
                             planetClicked = True
                             break
@@ -289,27 +337,17 @@ def main():
                 elif selected_planet and planetClicked:
                     planetClicked = False
 
-                
+                print("OFFSET: ", offset_x * (zoom_level/10), " ", offset_y * (zoom_level/10))
                 if selected_planet and not planetClicked:
-                    
                     selected_planet = movePlanet((selected_planet.x, selected_planet.y), (mouse_pos[0] + offset_x, mouse_pos[1] + offset_y), selected_planet)
                     selected_planet = None
 
-        # bg_width = max(SCREEN_WIDTH, WIDTH * zoom_level/10)
-        # bg_height = max(SCREEN_HEIGHT, HEIGHT * zoom_level / 10)
-
-        # scaled_bg = pygame.transform.scale(BG, (int(bg_width), int(bg_height)))
-
-        scaled_bg = background_handler.get_scaled_image(zoom_level)
-        offset_x = (scaled_bg.get_width() - SCREEN_WIDTH) //2
-        offset_y = (scaled_bg.get_height() - SCREEN_HEIGHT) //2
-
         # Draw the scaled background (no need to scale every time)
-        win.blit(scaled_bg, (0-offset_x, 0-offset_y))
+        win.blit(scaled_bg, (0-width_bg, 0-height_bg))
 
 
         if selected_planet and planetClicked:
-            pygame.draw.line(win, WHITE, (selected_planet.x-offset_x, selected_planet.y-offset_y), mouse_pos, 2)
+            pygame.draw.line(win, WHITE, (selected_planet.adjusted_x - offset_x, selected_planet.adjusted_y - offset_y), mouse_pos, 2)
 
         # draws slider for changing suns mass feature
         draw_slider(sliderX, sunMassSliderY, sliderWidth, sliderHeight, sunMassSliderPos)
@@ -323,12 +361,22 @@ def main():
         draw_slider(sliderX, zoomSliderY, sliderWidth, sliderHeight, zoomSliderPos)
 
         font = pygame.font.SysFont("Comic-Sans", 20)
-        mass_text = font.render(f"ZOOM IN/OUT: {int(zoom_level)}", True, WHITE)
-        win.blit(mass_text, (sliderX , zoomSliderY-35))
+        zoom_text = font.render(f"ZOOM IN/OUT: {int(zoom_level)}", True, WHITE)
+        win.blit(zoom_text, (sliderX , zoomSliderY-35))
+
+        # Draws slider for speed up feature
+        draw_slider(sliderX, speedUpSliderY, sliderWidth, sliderHeight, speedUpSliderPos)
+
+        font = pygame.font.SysFont("Comic-Sans", 20)
+        speed_text = font.render(f"SPEED UP/ SLOW DOWN: {int(fps_multiplier)}", True, WHITE)
+        win.blit(speed_text, (sliderX , speedUpSliderY-35))
 
         for obj in objects:
             obj.draw(zoom_level, offset_x, offset_y)
             obj.move(sun)
+
+            # obj.x += obj.vel_x * speed_multiplier  # Apply speed multiplier to velocity
+            # obj.y += obj.vel_y * speed_multiplier
 
             off_screen = obj.x < 0 or obj.x > WIDTH or obj.y < 0 or obj.y > HEIGHT
             collided_sun = math.sqrt((obj.x - sun.x)**2 + (obj.y - sun.y)**2) <= SUN_RADIUS
